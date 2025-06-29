@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer Profile - Vokkaligaru</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Kanit', sans-serif;
+            background: #0a0f1a;
+            color: #e2e8f0;
+        }
+        
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform-origin: center;
+        }
+        
+        .card-hover:hover {
+            transform: scale(1.03) translateY(-8px);
+            box-shadow: 0 25px 50px -12px rgba(34, 197, 94, 0.25);
+        }
+        
+        .animate-slide-up {
+            animation: slideUp 1s ease-out forwards;
+            opacity: 0;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .input-glow:focus {
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.5);
+            border-color: transparent;
+        }
+        
+        /* Navbar Animation Styles */
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #ffffff;
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #34d399;
+            transform: scaleX(1);
+            transform-origin: center;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-link:not(.active)::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #34d399;
+            transform: scaleX(0);
+            transform-origin: center;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            transform: scaleX(1);
+        }
+        
+        /* Back to top button */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: rgba(34, 197, 94, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+            z-index: 999;
+            border: 1px solid rgba(34, 197, 94, 0.5);
+        }
+        
+        .back-to-top:hover {
+            background: rgba(34, 197, 94, 1);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4);
+        }
+        
+        .back-to-top.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        /* Farm cards */
+        .farm-card { background: linear-gradient(135deg, rgba(6, 95, 70, 0.2) 0%, rgba(6, 78, 59, 0.2) 100%); }
+        .equipment-card { background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(4, 120, 87, 0.2) 100%); }
+        .dates-card { background: linear-gradient(135deg, rgba(120, 53, 15, 0.2) 0%, rgba(83, 33, 9, 0.2) 100%); }
+        
+        /* Edit mode styles */
+        .edit-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 4px;
+            padding: 4px 8px;
+            color: white;
+            width: 100%;
+        }
+        
+        .edit-mode {
+            border: 1px dashed rgba(34, 197, 94, 0.5);
+        }
+        
+        /* Custom calendar styling */
+        .flatpickr-calendar {
+            background: #0a0f1a;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        .flatpickr-day.selected, .flatpickr-day.selected:hover {
+            background: #22c55e;
+            border-color: #22c55e;
+        }
+        
+        .flatpickr-day.today {
+            border-color: #22c55e;
+        }
+        
+        .flatpickr-day:hover {
+            background: rgba(34, 197, 94, 0.2);
+        }
+        
+        /* Tenure remaining indicator */
+        .tenure-indicator {
+            height: 6px;
+            background: rgba(34, 197, 94, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        
+        .tenure-progress {
+            height: 100%;
+            background: linear-gradient(to right, #22c55e, #16a34a);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="bg-gray-800 py-4 sticky top-0 z-50 shadow-xl">
+        <div class="container mx-auto px-6 flex justify-between items-center">
+            <a href="#" class="text-xl font-bold text-green-400 flex items-center">
+                <i class="fas fa-leaf mr-2"></i> Vokkaligaru
+            </a>
+            <div class="flex space-x-6">
+                <a href="index.html" class="nav-link text-gray-300 font-medium">Home</a>
+                <a href="index.html#services" class="nav-link text-gray-300 font-medium">Services</a>
+                <a href="index.html#about" class="nav-link text-gray-300 font-medium">About Us</a>
+                <a href="index.html#contact" class="nav-link text-gray-300 font-medium">Contact Us</a>
+                <a href="profile.html" class="nav-link text-green-400 font-medium active"><i class="fas fa-user"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Profile Header Section -->
+    <section class="py-12 bg-gradient-to-b from-black/50 to-green-900/10">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center">
+                <!-- Profile Picture -->
+                <div class="relative mb-6 md:mb-0 md:mr-8">
+                    <img src="https://images.unsplash.com/photo-1564564321837-a57b7070ac4f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" 
+                         alt="Farmer" 
+                         class="w-32 h-32 rounded-full object-cover border-4 border-green-500/50">
+                    <button id="changePhotoBtn" class="absolute bottom-0 right-0 bg-green-600 hover:bg-green-700 text-white p-2 rounded-full">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                    <input type="file" id="photoUpload" class="hidden" accept="image/*">
+                </div>
+                
+                <!-- Profile Info -->
+                <div class="flex-1">
+                    <h1 class="text-4xl font-bold text-white mb-4">Farmer Profile</h1>
+                    
+                    <div class="grid md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <p class="text-green-400 mb-1">Name</p>
+                            <h2 id="farmerName" class="text-xl font-bold text-white">Sagar Gowda G</h2>
+                            <input type="text" id="nameInput" class="edit-input hidden" value="Sagar Gowda G">
+                        </div>
+                        <div>
+                            <p class="text-green-400 mb-1">Age</p>
+                            <h3 id="farmerAge" class="text-xl font-bold text-white">20</h3>
+                            <input type="number" id="ageInput" class="edit-input hidden" value="20">
+                        </div>
+                        <div>
+                            <p class="text-green-400 mb-1">Location</p>
+                            <h3 id="farmerLocation" class="text-xl font-bold text-white">OOTY, Tamil Nadu</h3>
+                            <input type="text" id="locationInput" class="edit-input hidden" value="OOTY, Tamil Nadu">
+                        </div>
+                        <div>
+                            <p class="text-green-400 mb-1">Member Since</p>
+                            <h3 class="text-xl font-bold text-white">2025</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-6">
+                        <button id="editProfileBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg">
+                            <i class="fas fa-edit mr-2"></i> Edit Profile
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Details Section -->
+    <section class="py-8 bg-black/30">
+        <div class="container mx-auto px-6">
+            <div class="bg-black/40 backdrop-blur-md rounded-2xl border border-green-900/50 p-6 card-hover">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-white">Contact Details</h2>
+                    <button id="editContactBtn" class="text-green-400 hover:text-green-300">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <p class="text-green-400 mb-1">Phone Number</p>
+                        <p id="phoneText" class="text-white">+91 98765 43210</p>
+                        <input type="tel" id="phoneInput" class="edit-input hidden" value="+91 98765 43210">
+                    </div>
+                    <div>
+                        <p class="text-green-400 mb-1">Email</p>
+                        <p id="emailText" class="text-white">rajesh@vokkaligaru.com</p>
+                        <input type="email" id="emailInput" class="edit-input hidden" value="rajesh@vokkaligaru.com">
+                    </div>
+                    <div class="md:col-span-2">
+                        <p class="text-green-400 mb-1">Address</p>
+                        <p id="addressText" class="text-white">123 Farm Road, Belgaum, Karnataka 590001</p>
+                        <textarea id="addressInput" class="edit-input hidden" rows="2">123 Farm Road, Belgaum, Karnataka 590001</textarea>
+                    </div>
+                </div>
+                
+                <div id="contactSaveBtn" class="hidden mt-4 text-center">
+                    <button id="saveContactBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg mr-3">
+                        <i class="fas fa-check mr-1"></i> Save
+                    </button>
+                    <button id="cancelContactBtn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
+                        <i class="fas fa-times mr-1"></i> Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Farm Overview Section -->
+    <section class="py-12 bg-gradient-to-b from-green-900/10 to-black/50">
+        <div class="container mx-auto px-6">
+            <div class="farm-card bg-black/40 backdrop-blur-md rounded-2xl border border-green-900/50 p-8 card-hover">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-white">Farm Overview</h2>
+                    <button id="editFarmBtn" class="text-green-400 hover:text-green-300">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+                
+                <div class="grid md:grid-cols-3 gap-6 mb-8">
+                    <div>
+                        <p class="text-green-400 mb-1">Total Land</p>
+                        <p id="landText" class="text-2xl font-bold text-white">12.5 Acres</p>
+                        <input type="text" id="landInput" class="edit-input hidden" value="12.5">
+                    </div>
+                    <div>
+                        <p class="text-green-400 mb-1">Crops Grown</p>
+                        <p id="cropsText" class="text-2xl font-bold text-white">3 Types</p>
+                        <input type="text" id="cropsInput" class="edit-input hidden" value="3">
+                    </div>
+                    <div>
+                        <p class="text-green-400 mb-1">Equipment Owned</p>
+                        <p id="equipmentText" class="text-2xl font-bold text-white">5 Items</p>
+                        <input type="text" id="equipmentInput" class="edit-input hidden" value="5">
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-white">Current Crops</h3>
+                        <button id="addCropBtn" class="text-green-400 hover:text-green-300 text-sm">
+                            <i class="fas fa-plus mr-1"></i> Add Crop
+                        </button>
+                    </div>
+                    
+                    <div id="cropsList" class="space-y-3">
+                        <!-- Crop items will be added here dynamically -->
+                        <div class="flex justify-between items-center bg-black/30 p-4 rounded-lg">
+                            <div>
+                                <h4 class="font-bold">Wheat</h4>
+                                <p class="text-green-300 text-sm">5.2 acres</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="text-green-400 hover:text-green-300">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-red-400 hover:text-red-300">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center bg-black/30 p-4 rounded-lg">
+                            <div>
+                                <h4 class="font-bold">Rice</h4>
+                                <p class="text-green-300 text-sm">4.8 acres</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="text-green-400 hover:text-green-300">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-red-400 hover:text-red-300">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center bg-black/30 p-4 rounded-lg">
+                            <div>
+                                <h4 class="font-bold">Corn</h4>
+                                <p class="text-green-300 text-sm">2.5 acres</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="text-green-400 hover:text-green-300">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-red-400 hover:text-red-300">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Add Crop Form (Hidden by default) -->
+                    <div id="addCropForm" class="hidden mt-6 bg-black/30 p-4 rounded-lg">
+                        <div class="grid md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                <label class="block text-green-400 mb-1">Crop Type</label>
+                                <input type="text" id="newCropType" class="w-full bg-black/40 border border-green-900/50 rounded-lg px-4 py-2 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-green-400 mb-1">Acres</label>
+                                <input type="number" id="newCropAcres" class="w-full bg-black/40 border border-green-900/50 rounded-lg px-4 py-2 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-green-400 mb-1">Planted On</label>
+                                <input type="date" id="newCropDate" class="w-full bg-black/40 border border-green-900/50 rounded-lg px-4 py-2 text-white">
+                            </div>
+                        </div>
+                        <div class="flex justify-end">
+                            <button id="saveCropBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg mr-3">
+                                <i class="fas fa-check mr-1"></i> Save
+                            </button>
+                            <button id="cancelCropBtn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
+                                <i class="fas fa-times mr-1"></i> Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Equipment & Important Dates Section -->
+    <section class="py-12 bg-gradient-to-b from-black/50 to-green-900/10">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Equipment Section -->
+                <div class="equipment-card bg-black/40 backdrop-blur-md rounded-2xl border border-green-900/50 p-6 card-hover">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-white">Farm Equipment</h2>
+                        <button id="addEquipmentBtn" class="text-green-400 hover:text-green-300">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="equipmentList" class="space-y-4">
+                        <!-- Equipment items will be added here dynamically -->
+                        <div class="equipment-item flex justify-between items-center bg-black/30 p-4 rounded-lg" data-id="1">
+                            <div class="flex items-center">
+                                <div class="bg-green-900/30 p-3 rounded-lg mr-4">
+                                    <i class="fas fa-tractor text-green-400"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold">Mahindra 575 DI</h4>
+                                    <p class="text-green-300 text-sm">Tractor - Purchased 2021</p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="edit-equipment text-green-400 hover:text-green-300">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="delete-equipment text-red-400 hover:text-red-300">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="equipment-item flex justify-between items-center bg-black/30 p-4 rounded-lg" data-id="2">
+                            <div class="flex items-center">
+                                <div class="bg-green-900/30 p-3 rounded-lg mr-4">
+                                    <i class="fas fa-water text-green-400"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold">Rain Gun System</h4>
+                                    <p class="text-green-300 text-sm">Irrigation - Purchased 2022</p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="edit-equipment text-green-400 hover:text-green-300">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="delete-equipment text-red-400 hover:text-red-300">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="equipment-item flex justify-between items-center bg-black/30 p-4 rounded-lg" data-id="3">
+                            <div class="flex items-center">
+                                <div class="bg-green-900/30 p-3 rounded-lg mr-4">
+                                    <i class="fas fa-spray-can text-green-400"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold">Power Sprayer</h4>
+                                    <p class="text-green-300 text-sm">Pesticide - Purchased 2020</p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="edit-equipment text-green-400 hover:text-green-300">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="delete-equipment text-red-400 hover:text-red-300">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Add/Edit Equipment Form (Hidden by default) -->
+                    <div id="equipmentForm" class="hidden mt-6 bg-black/30 p-4 rounded-lg">
+                        <input type="hidden" id="equipmentId">
+                        <div class="space-y-4 mb-4">
+                            <div>
+                                <label class="block text-green-400 mb-1">Equipment Name</label>
+                                <input type="text" id="equipmentName" class="w-full bg-black/40 border border-green-900/50 rounded-lg px-4 py-2 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-green-400 mb-1">Type</label>
+                                <select id="equipmentType" class="w-full bg-black/40 border border-green-900/50 rounded-lg px-4 py-2 text-white">
+                                    <option value="tractor">Tractor</option>
+                                    <option value="irrigation">Irrigation</option>
+                                    <option value="pesticide">Pesticide</option>
+                                    <option value="harvesting">Harvesting</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-green-400 mb-1">Purchase Year</label>
+                                <input type="number" id="equipmentYear" class="w-full bg-black/40 border border-green-900/50 rounded-lg px-4 py-2 text-white" value="2023">
+                            </div>
+                        </div>
+                        <div class="flex justify-end">
+                            <button id="saveEquipmentBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg mr-3">
+                                <i class="fas fa-check mr-1"></i> Save
+                            </button>
+                            <button id="cancelEquipmentBtn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
+                                <i class="fas fa-times mr-1"></i> Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Important Dates Section -->
+                <div class="dates-card bg-black/40 backdrop-blur-md rounded-2xl border border-green-900/50 p-6 card-hover">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-white">Important Dates</h2>
+                        <button id="addDateBtn" class="text-green-400 hover:text-green-300">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="datesList" class="space-y-4">
+                        <!-- Date items will be added here dynamically -->
+                        <div class="date-item flex justify-between items-start bg-black/30 p-4 rounded-lg" data-id="1">
+                            <div class="flex items-start">
+                                <div class="bg-green-900/30 p-2 rounded-full mr-4 mt-1">
+                                    <i class="fas fa-calendar-day text-green-400 text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold">Loan Repayment</h4>
+                                    <p class="text-green-300 text-sm mb-1">20 Feb 2024 to 20 May 2024</p>
+                                    <div class="tenure-indicator">
+                                        <div class="tenure-progress" style="width: 65%"></div>
+                                    </div>
+                                    <p class="text-green-400 text-xs mt-1">35 days remaining (65% completed)</p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="edit-date text-green-400 hover:text-green-300">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="delete-date text-red-400 hover:text-red-300">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="date-item flex justify-between items-start bg-black/30 p-4 rounded-lg" data-id="2">
+                            <div class="flex items-start">
+                                <div class="bg-green-900/30 p-2 rounded-full mr-4 mt-1">
+                                    <i class="fas fa-chalkboard-teacher text-green-400 text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold">Training Workshop</h4>
+                                    <p class="text-green-300 text-sm mb-1">25 Feb 2024 to 27 Feb 2024</p>
+                                    <div class="tenure-indicator">
+                                        <div class="tenure-progress" style="width: 20%"></div>
+                                    </div>
+                                    <p class="text-green-400 text-xs mt-1">2 days remaining (20% completed)</p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="edit-date text-green-400 hover:text-green-300">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="delete-date text-red-400 hover:text-red-300">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="date-item flex justify-between items-start bg-black/30 p-4 rounded-lg" data-id="3">
+                            <div class="flex items-start">
+                                <div class="bg-green-900/30 p-2 rounded-full mr-4 mt-1">
+                                    <i class="fas fa-seedling text-green-400 text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold">Sowing Season</h4>
+                                    <p class="text-green-300 text-sm mb-1">1 Mar 2024 to 30 Apr 2024</p>
+                                    <div class="tenure-indicator">
+                                        <div class="tenure-progress" style="width: 0%"></div>
+                                    </div>
+                                    <p class="text-green-400 text-xs mt-1">Not started yet</p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="edit-date text-green-400 hover:text-green-300">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="delete-date text-red-400 hover:text-red-300">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Add/Edit Date Form (Hidden by default) -->
+                    <div id="dateForm" class="hidden mt-6 bg-black/30 p-4 rounded-lg">
+                        <input type="hidden" id="dateId">
+                        <div class="space-y-4 mb-4">
+                            <div>
+                                <label class="block text-green-400 mb-1">Event Name</label>
+                                <input type="text" id="eventName" class="w-full bg-black/40 border border-green-900/50 rounded-lg px-4 py-2 text-white">
+                            </div>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-green-400 mb-1">Start Date</label>
+                                    <input type="text" id="startDate" class="w-full bg-black/40 border border-green-900/50 rounded-lg px-4 py-2 text-white datepicker" placeholder="Select date">
+                                </div>
+                                <div>
+                                    <label class="block text-green-400 mb-1">End Date</label>
+                                    <input type="text" id="endDate" class="w-full bg-black/40 border border-green-900/50 rounded-lg px-4 py-2 text-white datepicker" placeholder="Select date">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-green-400 mb-1">Description</label>
+                                <textarea id="eventDescription" class="w-full bg-black/40 border border-green-900/50 rounded-lg px-4 py-2 text-white" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="flex justify-end">
+                            <button id="saveDateBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg mr-3">
+                                <i class="fas fa-check mr-1"></i> Save
+                            </button>
+                            <button id="cancelDateBtn" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
+                                <i class="fas fa-times mr-1"></i> Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-black/80 border-t border-green-900/50 py-12">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="text-2xl font-bold text-green-400 flex items-center mb-4">
+                        <i class="fas fa-leaf mr-2"></i> Vokkaligaru
+                    </div>
+                    <p class="text-green-300 mb-6">
+                        A startup empowering farmers with innovative and sustainable agricultural solutions.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-green-400 hover:text-white text-xl transition">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="text-green-400 hover:text-white text-xl transition">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="text-green-400 hover:text-white text-xl transition">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="text-green-400 hover:text-white text-xl transition">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-4 text-white">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html" class="text-green-300 hover:text-white transition">Home</a></li>
+                        <li><a href="index.html#about" class="text-green-300 hover:text-white transition">About Us</a></li>
+                        <li><a href="index.html#services" class="text-green-300 hover:text-white transition">Services</a></li>
+                        <li><a href="index.html#contact" class="text-green-300 hover:text-white transition">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-4 text-white">Resources</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-green-300 hover:text-white transition">Market Prices</a></li>
+                        <li><a href="#" class="text-green-300 hover:text-white transition">Training Videos</a></li>
+                        <li><a href="#" class="text-green-300 hover:text-white transition">Pesticide Guide</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-4 text-white">Support</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-center">
+                            <i class="fas fa-phone-alt text-green-400 mr-2"></i>
+                            <span class="text-green-300">+91 81 4741 3434</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-envelope text-green-400 mr-2"></i>
+                            <span class="text-green-300">help@vokkaligaru.com</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-green-900/50 pt-8 text-center text-green-500 text-sm">
+                © 2025 Vokkaligaru. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <div class="back-to-top">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    
+    <script>
+        // Initialize date pickers
+        const datepickers = flatpickr(".datepicker", {
+            dateFormat: "d M Y",
+            theme: "dark",
+            minDate: "today"
+        });
+        
+        // Calculate tenure remaining percentage
+        function calculateTenure(startDate, endDate) {
+            const now = new Date();
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            
+            if (now < start) return { percentage: 0, daysRemaining: Math.ceil((start - now) / (1000 * 60 * 60 * 24)) };
+            if (now > end) return { percentage: 100, daysRemaining: 0 };
+            
+            const totalDuration = end - start;
+            const elapsed = now - start;
+            const percentage = Math.min(100, Math.max(0, Math.round((elapsed / totalDuration) * 100)));
+            const daysRemaining = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+            
+            return { percentage, daysRemaining };
+        }
+        
+        // Format date as "d M Y"
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+        
+        // Equipment data
+        let equipmentData = [
+            { id: 1, name: "Mahindra 575 DI", type: "tractor", year: "2021" },
+            { id: 2, name: "Rain Gun System", type: "irrigation", year: "2022" },
+            { id: 3, name: "Power Sprayer", type: "pesticide", year: "2020" }
+        ];
+        
+        // Dates data
+        let datesData = [
+            { 
+                id: 1, 
+                name: "Loan Repayment", 
+                startDate: "2024-02-20", 
+                endDate: "2024-05-20", 
+                description: "Karnataka Bank - ₹85,000" 
+            },
+            { 
+                id: 2, 
+                name: "Training Workshop", 
+                startDate: "2024-02-25", 
+                endDate: "2024-02-27", 
+                description: "Krishi Vigyan Kendra - Organic Farming" 
+            },
+            { 
+                id: 3, 
+                name: "Sowing Season", 
+                startDate: "2024-03-01", 
+                endDate: "2024-04-30", 
+                description: "Prepare fields for summer crops" 
+            }
+        ];
+        
+        // Render equipment list
+        function renderEquipmentList() {
+            const equipmentList = document.getElementById('equipmentList');
+            equipmentList.innerHTML = '';
+            
+            equipmentData.forEach(equip => {
+                const iconClass = {
+                    'tractor': 'fa-tractor',
+                    'irrigation': 'fa-water',
+                    'pesticide': 'fa-spray-can',
+                    'harvesting': 'fa-cut',
+                    'other': 'fa-tools'
+                }[equip.type] || 'fa-tools';
+                
+                const typeText = {
+                    'tractor': 'Tractor',
+                    'irrigation': 'Irrigation',
+                    'pesticide': 'Pesticide',
+                    'harvesting': 'Harvesting',
+                    'other': 'Other'
+                }[equip.type] || 'Other';
+                
+                const equipmentItem = document.createElement('div');
+                equipmentItem.className = 'equipment-item flex justify-between items-center bg-black/30 p-4 rounded-lg';
+                equipmentItem.dataset.id = equip.id;
+                equipmentItem.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="bg-green-900/30 p-3 rounded-lg mr-4">
+                            <i class="fas ${iconClass} text-green-400"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold">${equip.name}</h4>
+                            <p class="text-green-300 text-sm">${typeText} - Purchased ${equip.year}</p>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="edit-equipment text-green-400 hover:text-green-300">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-equipment text-red-400 hover:text-red-300">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                
+                equipmentList.appendChild(equipmentItem);
+            });
+            
+            // Update equipment count
+            document.getElementById('equipmentText').textContent = `${equipmentData.length} Items`;
+            document.getElementById('equipmentInput').value = equipmentData.length;
+            
+            // Add event listeners to new buttons
+            document.querySelectorAll('.edit-equipment').forEach(btn => {
+                btn.addEventListener('click', editEquipment);
+            });
+            
+            document.querySelectorAll('.delete-equipment').forEach(btn => {
+                btn.addEventListener('click', deleteEquipment);
+            });
+        }
+        
+        // Render dates list
+        function renderDatesList() {
+            const datesList = document.getElementById('datesList');
+            datesList.innerHTML = '';
+            
+            datesData.forEach(date => {
+                const { percentage, daysRemaining } = calculateTenure(date.startDate, date.endDate);
+                const today = new Date();
+                const startDate = new Date(date.startDate);
+                
+                const iconClass = {
+                    'Loan': 'fa-calendar-day',
+                    'Training': 'fa-chalkboard-teacher',
+                    'Sowing': 'fa-seedling',
+                    'Harvest': 'fa-cut',
+                    'default': 'fa-calendar-check'
+                }[date.name.split(' ')[0]] || 'fa-calendar-check';
+                
+                const statusText = today < startDate ? 
+                    `Starts in ${daysRemaining} days` : 
+                    (percentage === 100 ? 
+                        'Completed' : 
+                        `${daysRemaining} days remaining (${percentage}% completed)`);
+                
+                const dateItem = document.createElement('div');
+                dateItem.className = 'date-item flex justify-between items-start bg-black/30 p-4 rounded-lg';
+                dateItem.dataset.id = date.id;
+                dateItem.innerHTML = `
+                    <div class="flex items-start">
+                        <div class="bg-green-900/30 p-2 rounded-full mr-4 mt-1">
+                            <i class="fas ${iconClass} text-green-400 text-sm"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold">${date.name}</h4>
+                            <p class="text-green-300 text-sm mb-1">${formatDate(date.startDate)} to ${formatDate(date.endDate)}</p>
+                            <div class="tenure-indicator">
+                                <div class="tenure-progress" style="width: ${percentage}%"></div>
+                            </div>
+                            <p class="text-green-400 text-xs mt-1">${statusText}</p>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="edit-date text-green-400 hover:text-green-300">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-date text-red-400 hover:text-red-300">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                
+                datesList.appendChild(dateItem);
+            });
+            
+            // Add event listeners to new buttons
+            document.querySelectorAll('.edit-date').forEach(btn => {
+                btn.addEventListener('click', editDate);
+            });
+            
+            document.querySelectorAll('.delete-date').forEach(btn => {
+                btn.addEventListener('click', deleteDate);
+            });
+        }
+        
+        // Add new equipment
+        function addEquipment() {
+            const form = document.getElementById('equipmentForm');
+            const name = document.getElementById('equipmentName').value;
+            const type = document.getElementById('equipmentType').value;
+            const year = document.getElementById('equipmentYear').value;
+            
+            if (!name || !year) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            const newId = equipmentData.length > 0 ? Math.max(...equipmentData.map(e => e.id)) + 1 : 1;
+            equipmentData.push({
+                id: newId,
+                name,
+                type,
+                year
+            });
+            
+            renderEquipmentList();
+            form.classList.add('hidden');
+            document.getElementById('equipmentName').value = '';
+            document.getElementById('equipmentYear').value = '2023';
+        }
+        
+        // Edit equipment
+        function editEquipment() {
+            const item = this.closest('.equipment-item');
+            const id = parseInt(item.dataset.id);
+            const equipment = equipmentData.find(e => e.id === id);
+            
+            if (equipment) {
+                document.getElementById('equipmentId').value = equipment.id;
+                document.getElementById('equipmentName').value = equipment.name;
+                document.getElementById('equipmentType').value = equipment.type;
+                document.getElementById('equipmentYear').value = equipment.year;
+                
+                document.getElementById('equipmentForm').classList.remove('hidden');
+                document.getElementById('saveEquipmentBtn').textContent = 'Update';
+            }
+        }
+        
+        // Save equipment (add or update)
+        function saveEquipment() {
+            const id = parseInt(document.getElementById('equipmentId').value);
+            const name = document.getElementById('equipmentName').value;
+            const type = document.getElementById('equipmentType').value;
+            const year = document.getElementById('equipmentYear').value;
+            
+            if (!name || !year) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            if (id) {
+                // Update existing equipment
+                const index = equipmentData.findIndex(e => e.id === id);
+                if (index !== -1) {
+                    equipmentData[index] = { id, name, type, year };
+                }
+            } else {
+                // Add new equipment
+                const newId = equipmentData.length > 0 ? Math.max(...equipmentData.map(e => e.id)) + 1 : 1;
+                equipmentData.push({ id: newId, name, type, year });
+            }
+            
+            renderEquipmentList();
+            document.getElementById('equipmentForm').classList.add('hidden');
+            document.getElementById('equipmentId').value = '';
+            document.getElementById('equipmentName').value = '';
+            document.getElementById('equipmentYear').value = '2023';
+            document.getElementById('saveEquipmentBtn').textContent = 'Save';
+        }
+        
+        // Delete equipment
+        function deleteEquipment() {
+            if (confirm('Are you sure you want to delete this equipment?')) {
+                const item = this.closest('.equipment-item');
+                const id = parseInt(item.dataset.id);
+                
+                equipmentData = equipmentData.filter(e => e.id !== id);
+                renderEquipmentList();
+            }
+        }
+        
+        // Add new date
+        function addDate() {
+            const form = document.getElementById('dateForm');
+            const name = document.getElementById('eventName').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const description = document.getElementById('eventDescription').value;
+            
+            if (!name || !startDate || !endDate) {
+                alert('Please fill all required fields');
+                return;
+            }
+            
+            const newId = datesData.length > 0 ? Math.max(...datesData.map(d => d.id)) + 1 : 1;
+            datesData.push({
+                id: newId,
+                name,
+                startDate,
+                endDate,
+                description
+            });
+            
+            renderDatesList();
+            form.classList.add('hidden');
+            document.getElementById('eventName').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            document.getElementById('eventDescription').value = '';
+        }
+        
+        // Edit date
+        function editDate() {
+            const item = this.closest('.date-item');
+            const id = parseInt(item.dataset.id);
+            const date = datesData.find(d => d.id === id);
+            
+            if (date) {
+                document.getElementById('dateId').value = date.id;
+                document.getElementById('eventName').value = date.name;
+                document.getElementById('startDate').value = date.startDate;
+                document.getElementById('endDate').value = date.endDate;
+                document.getElementById('eventDescription').value = date.description || '';
+                
+                document.getElementById('dateForm').classList.remove('hidden');
+                document.getElementById('saveDateBtn').textContent = 'Update';
+            }
+        }
+        
+        // Save date (add or update)
+        function saveDate() {
+            const id = parseInt(document.getElementById('dateId').value);
+            const name = document.getElementById('eventName').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const description = document.getElementById('eventDescription').value;
+            
+            if (!name || !startDate || !endDate) {
+                alert('Please fill all required fields');
+                return;
+            }
+            
+            if (new Date(endDate) < new Date(startDate)) {
+                alert('End date must be after start date');
+                return;
+            }
+            
+            if (id) {
+                // Update existing date
+                const index = datesData.findIndex(d => d.id === id);
+                if (index !== -1) {
+                    datesData[index] = { id, name, startDate, endDate, description };
+                }
+            } else {
+                // Add new date
+                const newId = datesData.length > 0 ? Math.max(...datesData.map(d => d.id)) + 1 : 1;
+                datesData.push({ id: newId, name, startDate, endDate, description });
+            }
+            
+            renderDatesList();
+            document.getElementById('dateForm').classList.add('hidden');
+            document.getElementById('dateId').value = '';
+            document.getElementById('eventName').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            document.getElementById('eventDescription').value = '';
+            document.getElementById('saveDateBtn').textContent = 'Save';
+        }
+        
+        // Delete date
+        function deleteDate() {
+            if (confirm('Are you sure you want to delete this date?')) {
+                const item = this.closest('.date-item');
+                const id = parseInt(item.dataset.id);
+                
+                datesData = datesData.filter(d => d.id !== id);
+                renderDatesList();
+            }
+        }
+        
+        // Initialize equipment and dates lists
+        renderEquipmentList();
+        renderDatesList();
+        
+        // Equipment event listeners
+        document.getElementById('addEquipmentBtn').addEventListener('click', () => {
+            document.getElementById('equipmentForm').classList.remove('hidden');
+            document.getElementById('equipmentId').value = '';
+            document.getElementById('equipmentName').value = '';
+            document.getElementById('equipmentType').value = 'tractor';
+            document.getElementById('equipmentYear').value = '2023';
+            document.getElementById('saveEquipmentBtn').textContent = 'Save';
+        });
+        
+        document.getElementById('saveEquipmentBtn').addEventListener('click', saveEquipment);
+        document.getElementById('cancelEquipmentBtn').addEventListener('click', () => {
+            document.getElementById('equipmentForm').classList.add('hidden');
+        });
+        
+        // Dates event listeners
+        document.getElementById('addDateBtn').addEventListener('click', () => {
+            document.getElementById('dateForm').classList.remove('hidden');
+            document.getElementById('dateId').value = '';
+            document.getElementById('eventName').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            document.getElementById('eventDescription').value = '';
+            document.getElementById('saveDateBtn').textContent = 'Save';
+        });
+        
+        document.getElementById('saveDateBtn').addEventListener('click', saveDate);
+        document.getElementById('cancelDateBtn').addEventListener('click', () => {
+            document.getElementById('dateForm').classList.add('hidden');
+        });
+        
+        // Toggle edit mode for profile
+        const editProfileBtn = document.getElementById('editProfileBtn');
+        const nameInput = document.getElementById('nameInput');
+        const ageInput = document.getElementById('ageInput');
+        const locationInput = document.getElementById('locationInput');
+        const farmerName = document.getElementById('farmerName');
+        const farmerAge = document.getElementById('farmerAge');
+        const farmerLocation = document.getElementById('farmerLocation');
+        
+        editProfileBtn.addEventListener('click', () => {
+            farmerName.classList.toggle('hidden');
+            nameInput.classList.toggle('hidden');
+            farmerAge.classList.toggle('hidden');
+            ageInput.classList.toggle('hidden');
+            farmerLocation.classList.toggle('hidden');
+            locationInput.classList.toggle('hidden');
+            
+            if (nameInput.classList.contains('hidden')) {
+                // Save changes
+                farmerName.textContent = nameInput.value;
+                farmerAge.textContent = ageInput.value;
+                farmerLocation.textContent = locationInput.value;
+                editProfileBtn.innerHTML = '<i class="fas fa-edit mr-2"></i> Edit Profile';
+            } else {
+                // Enter edit mode
+                editProfileBtn.innerHTML = '<i class="fas fa-save mr-2"></i> Save Profile';
+            }
+        });
+        
+        // Toggle edit mode for contact details
+        const editContactBtn = document.getElementById('editContactBtn');
+        const phoneText = document.getElementById('phoneText');
+        const phoneInput = document.getElementById('phoneInput');
+        const emailText = document.getElementById('emailText');
+        const emailInput = document.getElementById('emailInput');
+        const addressText = document.getElementById('addressText');
+        const addressInput = document.getElementById('addressInput');
+        const contactSaveBtn = document.getElementById('contactSaveBtn');
+        
+        editContactBtn.addEventListener('click', () => {
+            phoneText.classList.toggle('hidden');
+            phoneInput.classList.toggle('hidden');
+            emailText.classList.toggle('hidden');
+            emailInput.classList.toggle('hidden');
+            addressText.classList.toggle('hidden');
+            addressInput.classList.toggle('hidden');
+            contactSaveBtn.classList.toggle('hidden');
+            
+            if (phoneText.classList.contains('hidden')) {
+                // Enter edit mode
+                editContactBtn.innerHTML = '<i class="fas fa-times"></i>';
+            } else {
+                // Cancel edit mode
+                phoneInput.value = phoneText.textContent;
+                emailInput.value = emailText.textContent;
+                addressInput.value = addressText.textContent;
+                editContactBtn.innerHTML = '<i class="fas fa-edit"></i>';
+            }
+        });
+        
+        // Save contact details
+        document.getElementById('saveContactBtn').addEventListener('click', () => {
+            phoneText.textContent = phoneInput.value;
+            emailText.textContent = emailInput.value;
+            addressText.textContent = addressInput.value;
+            
+            phoneText.classList.remove('hidden');
+            phoneInput.classList.add('hidden');
+            emailText.classList.remove('hidden');
+            emailInput.classList.add('hidden');
+            addressText.classList.remove('hidden');
+            addressInput.classList.add('hidden');
+            contactSaveBtn.classList.add('hidden');
+            
+            editContactBtn.innerHTML = '<i class="fas fa-edit"></i>';
+        });
+        
+        // Cancel contact edit
+        document.getElementById('cancelContactBtn').addEventListener('click', () => {
+            phoneText.classList.remove('hidden');
+            phoneInput.classList.add('hidden');
+            emailText.classList.remove('hidden');
+            emailInput.classList.add('hidden');
+            addressText.classList.remove('hidden');
+            addressInput.classList.add('hidden');
+            contactSaveBtn.classList.add('hidden');
+            
+            editContactBtn.innerHTML = '<i class="fas fa-edit"></i>';
+        });
+        
+        // Change profile picture
+        const changePhotoBtn = document.getElementById('changePhotoBtn');
+        const photoUpload = document.getElementById('photoUpload');
+        const profileImg = document.querySelector('.relative img');
+        
+        changePhotoBtn.addEventListener('click', () => {
+            photoUpload.click();
+        });
+        
+        photoUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    profileImg.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Toggle farm overview edit mode
+        const editFarmBtn = document.getElementById('editFarmBtn');
+        const landText = document.getElementById('landText');
+        const landInput = document.getElementById('landInput');
+        const cropsText = document.getElementById('cropsText');
+        const cropsInput = document.getElementById('cropsInput');
+        const equipmentText = document.getElementById('equipmentText');
+        const equipmentInput = document.getElementById('equipmentInput');
+        
+        editFarmBtn.addEventListener('click', () => {
+            landText.classList.toggle('hidden');
+            landInput.classList.toggle('hidden');
+            cropsText.classList.toggle('hidden');
+            cropsInput.classList.toggle('hidden');
+            equipmentText.classList.toggle('hidden');
+            equipmentInput.classList.toggle('hidden');
+            
+            if (landText.classList.contains('hidden')) {
+                // Enter edit mode
+                editFarmBtn.innerHTML = '<i class="fas fa-save"></i>';
+            } else {
+                // Save changes
+                landText.textContent = landInput.value + ' Acres';
+                cropsText.textContent = cropsInput.value + ' Types';
+                equipmentText.textContent = equipmentInput.value + ' Items';
+                editFarmBtn.innerHTML = '<i class="fas fa-edit"></i>';
+            }
+        });
+        
+        // Back to top button functionality
+        const backToTopButton = document.querySelector('.back-to-top');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopButton.classList.add('active');
+            } else {
+                backToTopButton.classList.remove('active');
+            }
+        });
+        
+        backToTopButton.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+        
+        // Animate elements on scroll
+        const animateOnScroll = () => {
+            document.querySelectorAll('.animate-slide-up, .card-hover, section').forEach(el => {
+                const rect = el.getBoundingClientRect();
+                if (rect.top < window.innerHeight * 0.75) {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }
+            });
+        };
+
+        // Initialize animation state
+        document.querySelectorAll('.animate-slide-up, .card-hover, section').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+        });
+
+        // Run animations on load and scroll
+        window.addEventListener('load', animateOnScroll);
+        window.addEventListener('scroll', animateOnScroll);
+    </script>
+</body>
+</html>
